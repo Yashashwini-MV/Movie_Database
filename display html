@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Movie Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function confirmDelete() {
+            return confirm("Are you sure you want to delete this movie?");
+        }
+
+        function toggleDeleteConfirmation() {
+            const confirmDeleteSection = document.querySelector('.confirm-delete');
+            confirmDeleteSection.classList.toggle('show');
+        }
+    </script>
+    <style>
+        .confirm-delete {
+            display: none;
+            /* Hide by default */
+        }
+        
+        .confirm-delete.show {
+            display: block;
+            /* Show when toggled */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container display-container">
+        <h1>Display Movie Data</h1>
+        <form action="/display" method="POST">
+            <label for="movie_id">Enter Movie ID:</label>
+            <input type="text" id="movie_id" name="movie_id" required>
+            <button type="submit">Display</button>
+        </form>
+
+        <br>
+        <a href="/">Insert Movie Data</a> |
+        <a href="/update">Update Movie Data</a> |
+        <a href="/delete">Delete Movie Data</a> {% if movie %}
+        <div>
+            <h2>Movie Information</h2>
+            <p><strong>Movie ID:</strong> {{ movie.movie_id }}</p>
+            <p><strong>Title:</strong> {{ movie.title }}</p>
+            <p><strong>Genre:</strong> {{ movie.genre }}</p>
+            <p><strong>Director:</strong> {{ movie.director }}</p>
+            <p><strong>Release Year:</strong> {{ movie.release_year }}</p>
+            <p><strong>Rating:</strong> {{ movie.rating }}</p>
+
+            <button onclick="toggleDeleteConfirmation()">Delete Movie</button>
+            <div class="confirm-delete">
+                <p>Are you sure you want to delete this movie?</p>
+                <form action="/delete" method="POST" onsubmit="return confirmDelete()">
+                    <input type="hidden" name="movie_id" value="{{ movie.movie_id }}">
+                    <button type="submit">Confirm Delete</button>
+                    <button type="button" onclick="toggleDeleteConfirmation()">Cancel</button>
+                </form>
+            </div>
+        </div>
+        {% elif movie is none %}
+        <p>No movie data found for this Movie ID.</p>
+        {% endif %} {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+        <div class="{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %} {% endif %} {% endwith %}
+    </div>
+</body>
+
+</html>
