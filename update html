@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Movie Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Basic styling */
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            margin-top: 10px;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        input,
+        select,
+        button {
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        button {
+            margin-top: 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #218838;
+        }
+        
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+            animation: fadeIn 1s ease-in-out;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .success,
+        .error {
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        /* Animations */
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        /* Transition effects for interactive elements */
+        
+        input:focus,
+        select:focus,
+        button:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+            transition: box-shadow 0.3s ease-in-out;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Update Movie Data</h1>
+        <form action="/update" method="POST">
+            <label for="movie_id">Enter Movie ID:</label>
+            <input type="text" id="movie_id" name="movie_id" required>
+
+            <label for="field">Field to Update:</label>
+            <select id="field" name="field" required>
+                <option value="title">Title</option>
+                <option value="genre">Genre</option>
+                <option value="director">Director</option>
+                <option value="release_year">Release Year</option>
+                <option value="rating">Rating</option>
+            </select>
+
+            <label for="new_value" id="new_value_label">New Value:</label>
+            <input type="text" id="new_value" name="new_value" required>
+
+            <label for="release_year" id="release_year_label" style="display: none;">Release Year:</label>
+            <input type="number" id="release_year" name="release_year" min="1888" max="2024" style="display: none;">
+
+            <label for="rating" id="rating_label" style="display: none;">Rating:</label>
+            <input type="number" id="rating" name="rating" min="0" max="10" step="0.1" style="display: none;">
+
+            <button type="submit">Update</button>
+        </form>
+
+        <br>
+        <a href="/">Insert Movie Data</a> |
+        <a href="/display">Display Movie Data</a> |
+        <a href="/delete">Delete Movie Data</a> {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+        <div class="{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fieldSelect = document.getElementById('field');
+            const newValueInput = document.getElementById('new_value');
+            const releaseYearInput = document.getElementById('release_year');
+            const ratingInput = document.getElementById('rating');
+            const releaseYearLabel = document.getElementById('release_year_label');
+            const ratingLabel = document.getElementById('rating_label');
+            const newValueLabel = document.getElementById('new_value_label');
+
+            fieldSelect.addEventListener('change', function() {
+                newValueInput.style.display = 'block';
+                newValueLabel.style.display = 'block';
+                newValueInput.required = true;
+                releaseYearInput.style.display = 'none';
+                releaseYearLabel.style.display = 'none';
+                releaseYearInput.required = false;
+                ratingInput.style.display = 'none';
+                ratingLabel.style.display = 'none';
+                ratingInput.required = false;
+
+                if (fieldSelect.value === 'release_year') {
+                    newValueInput.style.display = 'none';
+                    newValueLabel.style.display = 'none';
+                    releaseYearInput.style.display = 'block';
+                    releaseYearLabel.style.display = 'block';
+                    releaseYearInput.required = true;
+                    newValueInput.required = false;
+                } else if (fieldSelect.value === 'rating') {
+                    newValueInput.style.display = 'none';
+                    newValueLabel.style.display = 'none';
+                    ratingInput.style.display = 'block';
+                    ratingLabel.style.display = 'block';
+                    ratingInput.required = true;
+                    newValueInput.required = false;
+                }
+            });
+
+            // Add transition effects to form elements
+            const formElements = document.querySelectorAll('input, select, button');
+            formElements.forEach(element => {
+                element.addEventListener('focus', () => {
+                    element.classList.add('focused');
+                });
+                element.addEventListener('blur', () => {
+                    element.classList.remove('focused');
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
