@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Movie Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function confirmDelete() {
+            return confirm("Are you sure you want to delete this movie?");
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container delete-container">
+        <h1>Delete Movie Data</h1>
+        <form action="/delete" method="POST">
+            <label for="movie_id">Enter Movie ID:</label>
+            <input type="text" id="movie_id" name="movie_id" required>
+            <button type="submit" onclick="return confirmDelete()">Delete</button>
+        </form>
+
+        <br>
+        <a href="/">Insert Movie Data</a> |
+        <a href="/update">Update Movie Data</a> |
+        <a href="/display">Display Movie Data</a> {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+        <div class="{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %} {% endif %} {% endwith %}
+    </div>
+</body>
+
+</html>
