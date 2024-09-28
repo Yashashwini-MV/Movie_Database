@@ -1,0 +1,150 @@
+from flask import Flask, render_template, request, redirect, flash, url_for
+import mysql.connector
+import datetime
+
+app = Flask(__name__)
+app.secret_key = 'supersecretkey'
+
+# Function to establish MySQL connection
+def get_db_connection():
+    return mysql.connector.connect(
+        user='root', password='Sweety@123',
+        host='127.0.0.1', database='movies_db'
+    )
+
+# Route to handle GET and POST requests for inserting data
+@app.route("/", methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        title = request.form['title']
+        director = request.form['director']
+        release_year = request.form['release_year']
+        genre = request.form['genre']
+        rating = request.form['rating']
+
+        # Validation
+        try:
+            release_year = int(release_year)
+            if release_year < 1800 or release_year > datetime.datetime.now().year:
+                raise ValueError
+        except ValueError:
+            flash("Release year must be a valid year", "error")
+            return redirect(url_for('index'))
+        try:
+            rating = float(rating)
+            if rating < 0 or rating > 10:
+                raise ValueError
+        except ValueError:
+            flash("Rating must be a number between 0 and 10", "error")
+            return redirect(url_for('index'))
+
+        # Insert data into MySQL table
+        cnx = get_db_connection()
+        cursor = cnx.cursor()
+        try:
+            cursor.execute("INSERT INTO movies (title, director, release_year, genre, rating) VALUES (%s, %s, %s, %s, %s)",
+                           (title, director, release_year, genre, rating))
+            cnx.commit()
+            flash("Movie information inserted successfully", "success")
+        except mysql.connector.IntegrityError:
+            flash("Movie already exists", "error")
+        finally:
+            cursor.close()
+            cnx.close()
+
+        return redirect(url_for('index'))
+
+    return render_template('insert.html')
+
+# Route to handle GET and POST requests for displaying data
+@app.route("/display", methods=['GET', 'POST'])
+def display():
+    if request.method == 'POST':
+        movie_id = request.form['movie_id']
+
+        cnx = get_db_connection()
+        cursor = cnx.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM movies WHERE movie_id = %s", (movie_id,))
+        movie = cursor.fetchone()
+        cursor.close()
+        cnx.close()
+
+        if movie:
+            return render_template('display.html', movie=movie)
+        else:
+            flash("Movie not available", "error")
+            return render_template('display.html')
+
+    return render_template('display.html')
+
+# Route to handle GET and POST requests for updating data
+@app.route("/update", methods=['GET', 'POST'])
+def update():
+    if request.method == 'POST':
+        movie_id = request.form['movie_id']
+        field = request.form['field']
+        new_value = request.form['new_value']
+
+        # Validation
+        if field == 'release_year':
+            try:
+                new_value = int(new_value)
+                if new_value < 1800 or new_value > datetime.datetime.now().year:
+                    raise ValueError
+            except ValueError:
+                flash("Release year must be a valid year", "error")
+                return redirect(url_for('update'))
+        if field == 'rating':
+            try:
+                new_value = float(new_value)
+                if new_value < 0 or new_value > 10:
+                    raise ValueError
+            except ValueError:
+                flash("Rating must be a number between 0 and 10", "error")
+                return redirect(url_for('update'))
+
+        # Update data in MySQL table
+        cnx = get_db_connection()
+        cursor = cnx.cursor()
+        cursor.execute("SELECT * FROM movies WHERE movie_id = %s", (movie_id,))
+        result = cursor.fetchone()
+        if result:
+            cursor.execute(f"UPDATE movies SET {field} = %s WHERE movie_id = %s", (new_value, movie_id))
+            cnx.commit()
+            flash("Movie information updated successfully", "success")
+        else:
+            flash("Movie ID does not exist", "error")
+
+        cursor.close()
+        cnx.close()
+
+        return redirect(url_for('update'))
+
+    return render_template('update.html')
+
+# Route to handle GET and POST requests for deleting data
+@app.route("/delete", methods=['GET', 'POST'])
+def delete():
+    if request.method == 'POST':
+        movie_id = request.form['movie_id']
+
+        cnx = get_db_connection()
+        cursor = cnx.cursor()
+        cursor.execute("SELECT * FROM movies WHERE movie_id = %s", (movie_id,))
+        result = cursor.fetchone()
+        if result:
+            cursor.execute("DELETE FROM movies WHERE movie_id = %s", (movie_id,))
+            cnx.commit()
+            flash(f"Movie ID {movie_id} deleted successfully", "success")
+        else:
+            flash("Movie ID does not exist", "error")
+
+        cursor.close()
+        cnx.close()
+
+        return redirect(url_for('delete'))
+
+    return render_template('delete.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
